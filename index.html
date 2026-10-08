@@ -143,16 +143,21 @@
   }
 
   function getPerformanceState(delta, label) {
-    if (delta === null || delta === 0) return 'neutral';
-
-    const inverse = isInverseMetric(label);
-
-    if (!inverse) {
-      return delta > 0 ? 'good' : 'bad';
-    } else {
-      return delta < 0 ? 'good' : 'bad';
-    }
+  if (delta === null || delta === 0) {
+    return 'neutral';
   }
+
+  const metric = String(label).trim().toLowerCase();
+  const isUnsubscribed = metric.includes('unsub');
+
+  // Unsubscribed: fewer = good, more = bad
+  if (isUnsubscribed) {
+    return delta < 0 ? 'good' : 'bad';
+  }
+
+  // All other metrics: more = good, fewer = bad
+  return delta > 0 ? 'good' : 'bad';
+}
 
   function reactionEmoji(state) {
     if (state === 'good') return '👍';
