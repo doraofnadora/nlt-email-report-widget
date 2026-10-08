@@ -3,51 +3,53 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NLT Compact Percentage Change Widget</title>
+<title>NLT Percentage Comparison</title>
 <style>
-  :root { color-scheme: light; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, Helvetica, sans-serif; }
-  .widget { width: 100%; padding: 7px 9px; background: transparent; }
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .label { color: #475569; font-size: 12px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
-  .change { display: inline-flex; align-items: center; gap: 4px; font-size: 22px; line-height: 1; font-weight: 750; white-space: nowrap; }
-  .change svg { flex: 0 0 22px; height: 22px; width: 22px; stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  html, body { margin: 0; width: 100%; background: transparent; font-family: Arial, Helvetica, sans-serif; color: #334155; }
+  body { padding: 8px; }
+  .stack { display: flex; flex-direction: column; gap: var(--gap); }
+  .widget { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; min-height: 136px; }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #697586; overflow-wrap: anywhere; }
+  .change { display: flex; align-items: center; gap: 10px; margin: 11px 0 8px; font-size: clamp(27px, 5vw, 37px); line-height: 1; font-weight: 750; }
+  .change svg { flex: 0 0 32px; width: 32px; height: 32px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
   .increase { color: #15803d; } .decrease { color: #dc2626; } .neutral { color: #64748b; }
-  .details { color: #697586; font-size: 11px; margin-top: 5px; line-height: 1.3; }
+  .details { font-size: 13px; color: #697586; }
 </style>
 </head>
 <body>
-<section class="widget" aria-label="Percentage change statistic">
-  <div class="top">
-    <div id="label" class="label">Month-over-month change</div>
-    <div id="change" class="change neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="icon" d="M4 12h16"/></svg><span id="value">0.00%</span></div>
-  </div>
-  <div id="details" class="details"></div>
-</section>
+<div class="stack" id="stack"></div>
 <script>
-(() => {
- const params = new URLSearchParams(location.search);
- const previousParam = params.get('previous');
- const currentParam = params.get('current');
- const previous = previousParam === null ? 266 : Number(previousParam);
- const current = currentParam === null ? 259 : Number(currentParam);
- const label = params.get('label') || 'Month-over-month change';
- const el = id => document.getElementById(id);
- el('label').textContent = label;
- if (!Number.isFinite(previous) || !Number.isFinite(current) || previousParam === '' || currentParam === '' || previous === 0) {
-   el('value').textContent = 'N/A';
-   el('details').textContent = 'Enter valid values (previous must not be zero).';
-   return;
- }
- const delta = ((current - previous) / Math.abs(previous)) * 100;
- const up = delta > 0, down = delta < 0;
- el('change').className = 'change ' + (up ? 'increase' : down ? 'decrease' : 'neutral');
- el('icon').setAttribute('d', up ? 'M4 17 17 4 M7 4h10v10' : down ? 'M4 7l13 13 M7 20h10V10' : 'M4 12h16');
- el('value').textContent = (up ? '+' : down ? '−' : '') + Math.abs(delta).toFixed(2) + '%';
- const fmt = n => n.toLocaleString('en-US', {maximumFractionDigits: 4});
- el('details').textContent = `${fmt(previous)} → ${fmt(current)}`;
-})();
+  const params = new URLSearchParams(window.location.search);
+  const gapRequested = Number(params.get('gap'));
+  const gap = Number.isFinite(gapRequested) && params.has('gap') ? Math.max(0, Math.min(500, gapRequested)) : 16;
+  document.getElementById('stack').style.setProperty('--gap', gap + 'px');
+  const pair = [
+    {label: params.get('label1') || 'Delivered', previous: params.get('previous1') ?? '266', current: params.get('current1') ?? '259'},
+    {label: params.get('label2') || 'Opened', previous: params.get('previous2') ?? '54', current: params.get('current2') ?? '63'}
+  ];
+  const icon = (kind) => kind === 'increase'
+    ? '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 25L25 5M12 5h13v13"/></svg>'
+    : kind === 'decrease'
+    ? '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7l20 20M25 14v13H12"/></svg>'
+    : '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 16h22"/></svg>';
+  pair.forEach(({label, previous, current}) => {
+    const a = Number(previous), b = Number(current);
+    const valid = previous.trim() !== '' && current.trim() !== '' && Number.isFinite(a) && Number.isFinite(b) && a !== 0;
+    const delta = valid ? ((b-a)/Math.abs(a))*100 : null;
+    const kind = delta === null || delta === 0 ? 'neutral' : delta > 0 ? 'increase' : 'decrease';
+    const card = document.createElement('section');
+    card.className = 'widget';
+    const heading = document.createElement('div'); heading.className = 'label'; heading.textContent = label;
+    const result = document.createElement('div'); result.className = 'change ' + kind;
+    result.innerHTML = icon(kind);
+    const value = document.createElement('span'); value.textContent = delta === null ? 'N/A' : (delta > 0 ? '+' : delta < 0 ? '−' : '') + Math.abs(delta).toFixed(2) + '%';
+    result.appendChild(value);
+    const detail = document.createElement('div'); detail.className = 'details';
+    detail.textContent = valid ? `Previous: ${a.toLocaleString()} | Current: ${b.toLocaleString()}` : 'Enter valid values (previous must not be zero).';
+    card.append(heading, result, detail);
+    document.getElementById('stack').appendChild(card);
+  });
 </script>
 </body>
 </html>
