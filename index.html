@@ -1,165 +1,53 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NLT Email Change Widget</title>
-  <style>
-    :root { color-scheme: light; }
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      background: transparent;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #334155;
-    }
-
-    body {
-      padding: 4px;
-    }
-
-    .widget {
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
-
-    .title {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      color: #64748b;
-      margin-bottom: 6px;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 9px 0;
-      border-top: 1px solid #f1f5f9;
-    }
-
-    .row:first-of-type {
-      border-top: none;
-    }
-
-    .left {
-      min-width: 0;
-    }
-
-    .metric-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #334155;
-      margin-bottom: 2px;
-    }
-
-    .metric-values {
-      font-size: 12px;
-      color: #64748b;
-    }
-
-    .change {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .arrow {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .increase { color: #15803d; }
-    .decrease { color: #dc2626; }
-    .neutral { color: #64748b; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLT Compact Percentage Change Widget</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 100%; background: transparent; font-family: Arial, Helvetica, sans-serif; }
+  .widget { width: 100%; padding: 7px 9px; background: transparent; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .label { color: #475569; font-size: 12px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+  .change { display: inline-flex; align-items: center; gap: 4px; font-size: 22px; line-height: 1; font-weight: 750; white-space: nowrap; }
+  .change svg { flex: 0 0 22px; height: 22px; width: 22px; stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .increase { color: #15803d; } .decrease { color: #dc2626; } .neutral { color: #64748b; }
+  .details { color: #697586; font-size: 11px; margin-top: 5px; line-height: 1.3; }
+</style>
 </head>
 <body>
-  <section class="widget">
-    <div class="title" id="title">Email Performance Change</div>
-    <div id="rows"></div>
-  </section>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-
-    const title = params.get("title") || "Email Performance Change";
-    document.getElementById("title").textContent = title;
-
-    const metrics = [
-      {
-        name: "Delivered",
-        prev: Number(params.get("deliveredPrev") ?? 266),
-        curr: Number(params.get("deliveredCurr") ?? 259)
-      },
-      {
-        name: "Opened",
-        prev: Number(params.get("openedPrev") ?? 54),
-        curr: Number(params.get("openedCurr") ?? 63)
-      },
-      {
-        name: "Clicked",
-        prev: Number(params.get("clickedPrev") ?? 0),
-        curr: Number(params.get("clickedCurr") ?? 0)
-      },
-      {
-        name: "Unsubscribed",
-        prev: Number(params.get("unsubPrev") ?? 0),
-        curr: Number(params.get("unsubCurr") ?? 0)
-      }
-    ];
-
-    function formatNumber(value) {
-      return Number.isFinite(value) ? value.toLocaleString() : "N/A";
-    }
-
-    function getChange(prev, curr) {
-      if (!Number.isFinite(prev) || !Number.isFinite(curr) || prev === 0) {
-        return { text: "N/A", cls: "neutral", arrow: "→" };
-      }
-
-      const change = ((curr - prev) / Math.abs(prev)) * 100;
-      const cls = change > 0 ? "increase" : change < 0 ? "decrease" : "neutral";
-      const arrow = change > 0 ? "↗" : change < 0 ? "↘" : "→";
-      const sign = change > 0 ? "+" : change < 0 ? "−" : "";
-      const text = sign + Math.abs(change).toFixed(2) + "%";
-
-      return { text, cls, arrow };
-    }
-
-    const rows = document.getElementById("rows");
-
-    metrics.forEach(metric => {
-      const change = getChange(metric.prev, metric.curr);
-
-      const row = document.createElement("div");
-      row.className = "row";
-
-      row.innerHTML = `
-        <div class="left">
-          <div class="metric-name">${metric.name}</div>
-          <div class="metric-values">${formatNumber(metric.prev)} → ${formatNumber(metric.curr)}</div>
-        </div>
-        <div class="change ${change.cls}">
-          <span class="arrow">${change.arrow}</span>
-          <span>${change.text}</span>
-        </div>
-      `;
-
-      rows.appendChild(row);
-    });
-  </script>
+<section class="widget" aria-label="Percentage change statistic">
+  <div class="top">
+    <div id="label" class="label">Month-over-month change</div>
+    <div id="change" class="change neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="icon" d="M4 12h16"/></svg><span id="value">0.00%</span></div>
+  </div>
+  <div id="details" class="details"></div>
+</section>
+<script>
+(() => {
+ const params = new URLSearchParams(location.search);
+ const previousParam = params.get('previous');
+ const currentParam = params.get('current');
+ const previous = previousParam === null ? 266 : Number(previousParam);
+ const current = currentParam === null ? 259 : Number(currentParam);
+ const label = params.get('label') || 'Month-over-month change';
+ const el = id => document.getElementById(id);
+ el('label').textContent = label;
+ if (!Number.isFinite(previous) || !Number.isFinite(current) || previousParam === '' || currentParam === '' || previous === 0) {
+   el('value').textContent = 'N/A';
+   el('details').textContent = 'Enter valid values (previous must not be zero).';
+   return;
+ }
+ const delta = ((current - previous) / Math.abs(previous)) * 100;
+ const up = delta > 0, down = delta < 0;
+ el('change').className = 'change ' + (up ? 'increase' : down ? 'decrease' : 'neutral');
+ el('icon').setAttribute('d', up ? 'M4 17 17 4 M7 4h10v10' : down ? 'M4 7l13 13 M7 20h10V10' : 'M4 12h16');
+ el('value').textContent = (up ? '+' : down ? '−' : '') + Math.abs(delta).toFixed(2) + '%';
+ const fmt = n => n.toLocaleString('en-US', {maximumFractionDigits: 4});
+ el('details').textContent = `${fmt(previous)} → ${fmt(current)}`;
+})();
+</script>
 </body>
 </html>
