@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLT Percentage Change Widget</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; background: transparent; font-family: Arial, Helvetica, sans-serif; }
+  body { padding: 5px; }
+  .widget { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; min-height: 136px; }
+  .label { font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #697586; overflow-wrap: anywhere; }
+  .change { display: flex; align-items: center; gap: 10px; margin: 11px 0 8px; font-size: clamp(27px, 5vw, 37px); line-height: 1.1; font-weight: 750; }
+  .change svg { flex: 0 0 32px; height: 32px; width: 32px; stroke: currentColor; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .increase { color: #15803d; } .decrease { color: #dc2626; } .neutral { color: #64748b; }
+  .details { color: #697586; font-size: 13px; }
+</style>
+</head>
+<body>
+<section class="widget" aria-label="Percentage change statistic">
+  <div id="label" class="label">Month-over-month change</div>
+  <div id="change" class="change neutral"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="icon" d="M4 12h16"/></svg><span id="value">0.00%</span></div>
+  <div id="details" class="details"></div>
+</section>
+<script>
+(() => {
+ const params = new URLSearchParams(location.search);
+ const previousParam = params.get('previous');
+ const currentParam = params.get('current');
+ const previous = previousParam === null ? 266 : Number(previousParam);
+ const current = currentParam === null ? 259 : Number(currentParam);
+ const label = params.get('label') || 'Month-over-month change';
+ const el = id => document.getElementById(id);
+ el('label').textContent = label;
+ if (!Number.isFinite(previous) || !Number.isFinite(current) || previousParam === '' || currentParam === '' || previous === 0) {
+   el('value').textContent = 'N/A';
+   el('details').textContent = 'Enter valid values; previous cannot be zero.';
+   return;
+ }
+ const delta = ((current - previous) / Math.abs(previous)) * 100;
+ const up = delta > 0, down = delta < 0;
+ el('change').className = 'change ' + (up ? 'increase' : down ? 'decrease' : 'neutral');
+ el('icon').setAttribute('d', up ? 'M4 17 17 4 M7 4h10v10' : down ? 'M4 7l13 13 M7 20h10V10' : 'M4 12h16');
+ el('value').textContent = (up ? '+' : down ? '−' : '') + Math.abs(delta).toFixed(2) + '%';
+ const fmt = n => n.toLocaleString('en-US', {maximumFractionDigits: 4});
+ el('details').textContent = `Previous: ${fmt(previous)}  |  Current: ${fmt(current)}`;
+})();
+</script>
+</body>
+</html>
